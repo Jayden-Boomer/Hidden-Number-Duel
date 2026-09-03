@@ -1,9 +1,9 @@
--[] update color hard coding
--[] add range selection capability
--[] add gamertag/name/nickname selection
--[] online multiplayer (single server)
--[] more than 2 players in the lobby (you can choose which other player to ask your question)
--[] gamemodes: 
-       -[] FFA: each player is randomly assigned a number in the range and can see the other players' numbers
-       -[] Elimination (checkbox): players who guess incorrectly are eliminated (loose if only 2p)
-       -[] KOTH: If another player guesses your number you are out
+- [ ] update color hard coding
+- [ ] add range selection capability
+- [ ] add gamertag/name/nickname selection
+- [ ] online multiplayer (single server)
+- [ ] more than 2 players in the lobby (you can choose which other player to ask your question)
+- [ ] gamemodes: 
+  - [ ] FFA: each player is randomly assigned a number in the range and can see the other players' numbers
+  - [ ] Elimination (checkbox): players who guess incorrectly are eliminated (loose if only 2p)
+  - [ ] KOTH: If another player guesses your number you are out
