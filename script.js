@@ -26,7 +26,7 @@ function cloneTemplate(id) {
 }
 
 function playerName(index) {
-    return game.names[index] || `Player ${index + 1}`;
+    return game.names[index] || "this player";
 }
 
 function opponentOf(index) {
@@ -37,7 +37,7 @@ function renderSetup(playerIndex) {
     gameCard.innerHTML = "";
     const view = cloneTemplate("setupTemplate");
     view.querySelector(".step-badge").textContent = `Setup ${playerIndex + 1} of 2`;
-    view.querySelector(".screen-title").textContent = `${playerName(playerIndex)}, choose your number`;
+    view.querySelector(".screen-title").textContent = "Choose your nickname and number";
     view.querySelector(".screen-copy").textContent =
         `Pick any whole number from 1 to ${MAX_NUMBER}. The next screen will hide it before the other player takes the device.`;
 
