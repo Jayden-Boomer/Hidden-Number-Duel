@@ -11,7 +11,7 @@
   --muted: #9ca8ba;
   --line: #2a3343;
   --accent: var(--accent-theme-color);
-  --accent-2: var(--theme-color);
+  --accent-2: var(--accent-theme-color);
   --danger: #ff6b7a;
   --shadow: 0 24px 70px rgb(from var(--accent-theme-color) r g b / 12%);
 }
