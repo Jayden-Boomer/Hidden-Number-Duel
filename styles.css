@@ -2,7 +2,7 @@
 
 :root {
   /* Change this one value to recolor the game's main theme */
-  --theme-color: #2583ff;
+  --theme-color: #25ffc7;
   --bg: #0d1017;
   --panel: rgba(22, 27, 38, 0.94);
   --panel-2: #1d2330;
@@ -12,7 +12,7 @@
   --accent: var(--theme-color);
   --accent-2: var(--theme-color);
   --danger: #ff6b7a;
-  --shadow: 0 24px 70px rgba(0, 0, 0, .38);
+  --shadow: 0 24px 70px rgb(from var(--theme-color) r g b / 12%);
 }
 
 * { box-sizing: border-box; }
