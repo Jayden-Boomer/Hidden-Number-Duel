@@ -2,7 +2,8 @@
 
 Rules implemented:
 
-- Each player secretly chooses a whole number from 1 to 50.
+- The first player chooses the range endpoint, from 2 to 1000.
+- Each player secretly chooses a whole number from 1 to the selected endpoint.
 - Each player chooses a nickname shown throughout the game.
 - The first player goes first.
 - On each turn, the player can ask a question or make a guess.

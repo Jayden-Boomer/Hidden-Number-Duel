@@ -1,4 +1,5 @@
-const MAX_NUMBER = 50;
+const DEFAULT_MAX_NUMBER = 50;
+const MAX_ENDPOINT = 1000;
 const MAX_NICKNAME_LENGTH = 24;
 
 const game = {
@@ -6,6 +7,7 @@ const game = {
     names: [null, null],
     currentPlayer: 0,
     setupPlayer: 0,
+    maxNumber: DEFAULT_MAX_NUMBER,
     history: [],
     pendingQuestion: null
 };
@@ -33,18 +35,54 @@ function opponentOf(index) {
     return index === 0 ? 1 : 0;
 }
 
+function updateRangeDisplay() {
+    document.getElementById("rangeDisplay").textContent = `1–${game.maxNumber}`;
+    document.getElementById("rangeRule").textContent =
+        `Each player secretly chooses a number from 1 to ${game.maxNumber}.`;
+}
+
+function renderRangeSetup() {
+    document.querySelector(".range-pill").classList.add("hidden");
+    gameCard.innerHTML = "";
+    const view = cloneTemplate("rangeTemplate");
+    const form = view.querySelector(".range-form");
+    const input = view.querySelector("#maxNumberInput");
+    const error = view.querySelector(".error");
+
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const maxNumber = Number(input.value);
+
+        if (!Number.isInteger(maxNumber) || maxNumber < 2 || maxNumber > MAX_ENDPOINT) {
+            error.textContent = `Choose a whole-number endpoint from 2 to ${MAX_ENDPOINT}.`;
+            input.focus();
+            return;
+        }
+
+        game.maxNumber = maxNumber;
+        updateRangeDisplay();
+        renderSetup(0);
+    });
+
+    gameCard.appendChild(view);
+    setTimeout(() => input.focus(), 0);
+}
+
 function renderSetup(playerIndex) {
+    document.querySelector(".range-pill").classList.remove("hidden");
     gameCard.innerHTML = "";
     const view = cloneTemplate("setupTemplate");
     view.querySelector(".step-badge").textContent = `Setup ${playerIndex + 1} of 2`;
     view.querySelector(".screen-title").textContent = "Choose your nickname and number";
     view.querySelector(".screen-copy").textContent =
-        `Pick any whole number from 1 to ${MAX_NUMBER}. The next screen will hide it before the other player takes the device.`;
+        `Pick any whole number from 1 to ${game.maxNumber}. The next screen will hide it before the other player takes the device.`;
 
     const form = view.querySelector(".secret-form");
     const nicknameInput = view.querySelector("#nicknameInput");
     const input = view.querySelector("#secretInput");
     const error = view.querySelector(".error");
+
+    input.max = game.maxNumber;
 
     form.addEventListener("submit", (event) => {
         event.preventDefault();
@@ -57,8 +95,8 @@ function renderSetup(playerIndex) {
             return;
         }
 
-        if (!Number.isInteger(value) || value < 1 || value > MAX_NUMBER) {
-            error.textContent = `Enter a whole number from 1 to ${MAX_NUMBER}.`;
+        if (!Number.isInteger(value) || value < 1 || value > game.maxNumber) {
+            error.textContent = `Enter a whole number from 1 to ${game.maxNumber}.`;
             return;
         }
 
@@ -178,13 +216,14 @@ function renderTurn() {
     const guessForm = view.querySelector(".guess-form");
     const guessInput = view.querySelector("#guessInput");
     const guessError = view.querySelector(".guess-error");
+    guessInput.max = game.maxNumber;
 
     guessForm.addEventListener("submit", (event) => {
         event.preventDefault();
         const guess = Number(guessInput.value);
 
-        if (!Number.isInteger(guess) || guess < 1 || guess > MAX_NUMBER) {
-            guessError.textContent = `Enter a whole number from 1 to ${MAX_NUMBER}.`;
+        if (!Number.isInteger(guess) || guess < 1 || guess > game.maxNumber) {
+            guessError.textContent = `Enter a whole number from 1 to ${game.maxNumber}.`;
             return;
         }
 
@@ -337,7 +376,8 @@ function resetGame() {
     game.setupPlayer = 0;
     game.history = [];
     game.pendingQuestion = null;
-    renderSetup(0);
+    game.maxNumber = DEFAULT_MAX_NUMBER;
+    renderRangeSetup();
 }
 
 document.querySelector(".close-dialog").addEventListener("click", () => rulesDialog.close());
@@ -345,4 +385,4 @@ rulesDialog.addEventListener("click", (event) => {
     if (event.target === rulesDialog) rulesDialog.close();
 });
 
-renderSetup(0);
+renderRangeSetup();

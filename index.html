@@ -19,11 +19,31 @@
                     Discover your opponent's secret number using questions that contain no numbers.
                 </p>
             </div>
-            <div class="range-pill">Range: <strong>1–50</strong></div>
+            <div class="range-pill">Range: <strong id="rangeDisplay">1–50</strong></div>
         </header>
 
         <section id="gameCard" class="game-card" aria-live="polite"></section>
     </main>
+
+    <template id="rangeTemplate">
+        <div class="screen">
+            <div class="step-badge">Game setup</div>
+            <h2 class="screen-title">Choose the range</h2>
+            <p class="screen-copy">Set the highest possible number for both players before they choose their names and
+                secret numbers.</p>
+
+            <form class="range-form secret-form">
+                <label for="maxNumberInput">Range endpoint</label>
+                <div class="number-row">
+                    <input id="maxNumberInput" type="number" min="2" max="1000" value="50" inputmode="numeric"
+                        required />
+                    <button type="submit" class="primary-btn">Continue</button>
+                </div>
+                <p class="hint">The range will be from 1 to this endpoint.</p>
+                <p class="error" role="alert"></p>
+            </form>
+        </div>
+    </template>
 
     <template id="setupTemplate">
         <div class="screen">
@@ -37,7 +57,7 @@
                 <p class="hint">Choose the name the other player will see.</p>
                 <label for="secretInput">Your secret number</label>
                 <div class="number-row">
-                    <input id="secretInput" type="number" min="1" max="50" inputmode="numeric" required />
+                    <input id="secretInput" type="number" min="1" inputmode="numeric" required />
                     <button type="submit" class="primary-btn">Lock it in</button>
                 </div>
                 <p class="hint">Keep this hidden from the other player.</p>
@@ -90,7 +110,7 @@
                 <form class="guess-form">
                     <label for="guessInput">Your guess</label>
                     <div class="number-row">
-                        <input id="guessInput" type="number" min="1" max="50" inputmode="numeric" required />
+                        <input id="guessInput" type="number" min="1" inputmode="numeric" required />
                         <button class="primary-btn" type="submit">Submit guess</button>
                     </div>
                     <p class="hint">A wrong guess ends your turn.</p>
@@ -150,7 +170,7 @@
                 <button class="icon-btn close-dialog" aria-label="Close rules">×</button>
             </div>
             <ol>
-                <li>Each player secretly chooses a number from 1 to 50.</li>
+                <li id="rangeRule">Each player secretly chooses a number from 1 to 50.</li>
                 <li>Players alternate turns.</li>
                 <li>On your turn, either ask one question or make one number guess.</li>
                 <li>Questions may be open-ended, but cannot contain digits or number words.</li>
