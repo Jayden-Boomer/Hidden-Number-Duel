@@ -1,6 +1,7 @@
-const MAX_NUMBER = 50;
+const DEFAULT_game.maxNumber = 50;
 
 const game = {
+  maxNumber: DEFAULT_game.maxNumber,
   secrets: [null, null],
   currentPlayer: 0,
   setupPlayer: 0,
@@ -10,6 +11,7 @@ const game = {
 
 const gameCard = document.getElementById("gameCard");
 const rulesDialog = document.getElementById("rulesDialog");
+const rangeDisplay = document.getElementById("rangeDisplay");
 
 const numberWords = new Set([
   "zero","one","two","three","four","five","six","seven","eight","nine","ten",
@@ -31,24 +33,57 @@ function opponentOf(index) {
   return index === 0 ? 1 : 0;
 }
 
+
+function updateRangeDisplay() {
+  rangeDisplay.textContent = `1–${game.maxNumber}`;
+}
+
+function renderRangeSetup() {
+  gameCard.innerHTML = "";
+  const view = cloneTemplate("rangeTemplate");
+  const form = view.querySelector(".range-form");
+  const input = view.querySelector("#rangeInput");
+  const error = view.querySelector(".error");
+
+  input.value = game.maxNumber;
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const value = Number(input.value);
+
+    if (!Number.isInteger(value) || value < 2 || value > 1000000) {
+      error.textContent = "Enter a whole number from 2 to 1,000,000.";
+      return;
+    }
+
+    game.maxNumber = value;
+    updateRangeDisplay();
+    renderSetup(0);
+  });
+
+  gameCard.appendChild(view);
+  setTimeout(() => input.focus(), 0);
+}
+
 function renderSetup(playerIndex) {
   gameCard.innerHTML = "";
   const view = cloneTemplate("setupTemplate");
   view.querySelector(".step-badge").textContent = `Setup ${playerIndex + 1} of 2`;
   view.querySelector(".screen-title").textContent = `${playerName(playerIndex)}, choose your number`;
   view.querySelector(".screen-copy").textContent =
-    `Pick any whole number from 1 to ${MAX_NUMBER}. The next screen will hide it before the other player takes the device.`;
+    `Pick any whole number from 1 to ${game.maxNumber}. The next screen will hide it before the other player takes the device.`;
 
   const form = view.querySelector(".secret-form");
   const input = view.querySelector("#secretInput");
   const error = view.querySelector(".error");
+  input.max = game.maxNumber;
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const value = Number(input.value);
 
-    if (!Number.isInteger(value) || value < 1 || value > MAX_NUMBER) {
-      error.textContent = `Enter a whole number from 1 to ${MAX_NUMBER}.`;
+    if (!Number.isInteger(value) || value < 1 || value > game.maxNumber) {
+      error.textContent = `Enter a whole number from 1 to ${game.maxNumber}.`;
       return;
     }
 
@@ -167,13 +202,14 @@ function renderTurn() {
   const guessForm = view.querySelector(".guess-form");
   const guessInput = view.querySelector("#guessInput");
   const guessError = view.querySelector(".guess-error");
+  guessInput.max = game.maxNumber;
 
   guessForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const guess = Number(guessInput.value);
 
-    if (!Number.isInteger(guess) || guess < 1 || guess > MAX_NUMBER) {
-      guessError.textContent = `Enter a whole number from 1 to ${MAX_NUMBER}.`;
+    if (!Number.isInteger(guess) || guess < 1 || guess > game.maxNumber) {
+      guessError.textContent = `Enter a whole number from 1 to ${game.maxNumber}.`;
       return;
     }
 
@@ -313,12 +349,14 @@ function renderWinner(winner, winningGuess) {
 }
 
 function resetGame() {
+  game.maxNumber = DEFAULT_MAX_NUMBER;
   game.secrets = [null, null];
   game.currentPlayer = 0;
   game.setupPlayer = 0;
   game.history = [];
   game.pendingQuestion = null;
-  renderSetup(0);
+  updateRangeDisplay();
+  renderRangeSetup();
 }
 
 document.querySelector(".close-dialog").addEventListener("click", () => rulesDialog.close());
@@ -326,4 +364,5 @@ rulesDialog.addEventListener("click", (event) => {
   if (event.target === rulesDialog) rulesDialog.close();
 });
 
-renderSetup(0);
+updateRangeDisplay();
+renderRangeSetup();
