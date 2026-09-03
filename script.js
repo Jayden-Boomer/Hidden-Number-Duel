@@ -122,6 +122,15 @@ function renderTurn() {
   const questionError = view.querySelector(".question-error");
   const charCount = view.querySelector(".char-count");
 
+  // Only show the example question during the first round
+  // (before either player has completed a question/guess turn).
+  if (game.history.length === 0) {
+    questionInput.placeholder =
+      "Example: Is your number closer to the beginning or the end of the range?";
+  } else {
+    questionInput.placeholder = "Ask a question about your opponent's number...";
+  }
+
   questionInput.addEventListener("input", () => {
     charCount.textContent = `${questionInput.value.length} / 180`;
     questionError.textContent = "";
