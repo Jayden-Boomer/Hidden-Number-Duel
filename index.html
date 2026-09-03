@@ -1,170 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#10131a" />
-  <title>Hidden Number Duel</title>
-  <link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#10131a" />
+    <title>Hidden Number Duel</title>
+    <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
-  <main class="app-shell">
-    <header class="hero">
-      <div>
-        <p class="eyebrow">2 PLAYER • PASS & PLAY</p>
-        <h1>Hidden Number Duel</h1>
-        <p class="subtitle">
-          Discover your opponent's secret number using questions that contain no numbers.
-        </p>
-      </div>
-      <div class="range-pill">Range: <strong>1–50</strong></div>
-    </header>
+    <main class="app-shell">
+        <header class="hero">
+            <div>
+                <p class="eyebrow">2 PLAYER • PASS & PLAY</p>
+                <h1>Hidden Number Duel</h1>
+                <p class="subtitle">
+                    Discover your opponent's secret number using questions that contain no numbers.
+                </p>
+            </div>
+            <div class="range-pill">Range: <strong>1–50</strong></div>
+        </header>
 
-    <section id="gameCard" class="game-card" aria-live="polite"></section>
-  </main>
+        <section id="gameCard" class="game-card" aria-live="polite"></section>
+    </main>
 
-  <template id="setupTemplate">
-    <div class="screen">
-      <div class="step-badge"></div>
-      <h2 class="screen-title"></h2>
-      <p class="screen-copy"></p>
+    <template id="setupTemplate">
+        <div class="screen">
+            <div class="step-badge"></div>
+            <h2 class="screen-title"></h2>
+            <p class="screen-copy"></p>
 
-      <form class="secret-form">
-        <label for="secretInput">Your secret number</label>
-        <div class="number-row">
-          <input id="secretInput" type="number" min="1" max="50" inputmode="numeric" required />
-          <button type="submit" class="primary-btn">Lock it in</button>
+            <form class="secret-form">
+                <label for="nicknameInput">Your nickname</label>
+                <input id="nicknameInput" type="text" maxlength="24" autocomplete="nickname" required />
+                <p class="hint">Choose the name the other player will see.</p>
+                <label for="secretInput">Your secret number</label>
+                <div class="number-row">
+                    <input id="secretInput" type="number" min="1" max="50" inputmode="numeric" required />
+                    <button type="submit" class="primary-btn">Lock it in</button>
+                </div>
+                <p class="hint">Keep this hidden from the other player.</p>
+                <p class="error" role="alert"></p>
+            </form>
         </div>
-        <p class="hint">Keep this hidden from the other player.</p>
-        <p class="error" role="alert"></p>
-      </form>
-    </div>
-  </template>
+    </template>
 
-  <template id="handoffTemplate">
-    <div class="screen centered">
-      <div class="handoff-icon">↔</div>
-      <p class="eyebrow">PASS THE DEVICE</p>
-      <h2 class="screen-title"></h2>
-      <p class="screen-copy"></p>
-      <button class="primary-btn continue-btn">I'm ready</button>
-    </div>
-  </template>
-
-  <template id="turnTemplate">
-    <div class="screen">
-      <div class="turn-header">
-        <div>
-          <p class="eyebrow turn-label"></p>
-          <h2 class="screen-title">What will you do?</h2>
+    <template id="handoffTemplate">
+        <div class="screen centered">
+            <div class="handoff-icon">↔</div>
+            <p class="eyebrow">PASS THE DEVICE</p>
+            <h2 class="screen-title"></h2>
+            <p class="screen-copy"></p>
+            <button class="primary-btn continue-btn">I'm ready</button>
         </div>
-        <button class="ghost-btn rules-btn" type="button">Rules</button>
-      </div>
+    </template>
 
-      <div class="mode-tabs" role="tablist" aria-label="Choose action">
-        <button class="mode-tab active" data-mode="question" type="button">Ask a question</button>
-        <button class="mode-tab" data-mode="guess" type="button">Make a guess</button>
-      </div>
+    <template id="turnTemplate">
+        <div class="screen">
+            <div class="turn-header">
+                <div>
+                    <p class="eyebrow turn-label"></p>
+                    <h2 class="screen-title">What will you do?</h2>
+                </div>
+                <button class="ghost-btn rules-btn" type="button">Rules</button>
+            </div>
 
-      <div class="mode-panel question-panel">
-        <form class="question-form">
-          <label for="questionInput">Ask about your opponent's number</label>
-          <textarea
-            id="questionInput"
-            rows="4"
-            maxlength="180"
-            placeholder="Example: Is your number closer to the beginning or the end of the range?"
-            required
-          ></textarea>
-          <div class="form-footer">
-            <p class="hint">Questions cannot contain digits or number words.</p>
-            <span class="char-count">0 / 180</span>
-          </div>
-          <p class="error question-error" role="alert"></p>
-          <button class="primary-btn wide-btn" type="submit">Ask question</button>
-        </form>
-      </div>
+            <div class="mode-tabs" role="tablist" aria-label="Choose action">
+                <button class="mode-tab active" data-mode="question" type="button">Ask a question</button>
+                <button class="mode-tab" data-mode="guess" type="button">Make a guess</button>
+            </div>
 
-      <div class="mode-panel guess-panel hidden">
-        <form class="guess-form">
-          <label for="guessInput">Your guess</label>
-          <div class="number-row">
-            <input id="guessInput" type="number" min="1" max="50" inputmode="numeric" required />
-            <button class="primary-btn" type="submit">Submit guess</button>
-          </div>
-          <p class="hint">A wrong guess ends your turn.</p>
-          <p class="error guess-error" role="alert"></p>
-        </form>
-      </div>
+            <div class="mode-panel question-panel">
+                <form class="question-form">
+                    <label for="questionInput">Ask about your opponent's number</label>
+                    <textarea id="questionInput" rows="4" maxlength="180"
+                        placeholder="Example: Is your number closer to the beginning or the end of the range?"
+                        required></textarea>
+                    <div class="form-footer">
+                        <p class="hint">Questions cannot contain digits or number words.</p>
+                        <span class="char-count">0 / 180</span>
+                    </div>
+                    <p class="error question-error" role="alert"></p>
+                    <button class="primary-btn wide-btn" type="submit">Ask question</button>
+                </form>
+            </div>
 
-      <div class="history-section">
-        <div class="history-heading">
-          <h3>Conversation</h3>
-          <span class="history-count"></span>
+            <div class="mode-panel guess-panel hidden">
+                <form class="guess-form">
+                    <label for="guessInput">Your guess</label>
+                    <div class="number-row">
+                        <input id="guessInput" type="number" min="1" max="50" inputmode="numeric" required />
+                        <button class="primary-btn" type="submit">Submit guess</button>
+                    </div>
+                    <p class="hint">A wrong guess ends your turn.</p>
+                    <p class="error guess-error" role="alert"></p>
+                </form>
+            </div>
+
+            <div class="history-section">
+                <div class="history-heading">
+                    <h3>Conversation</h3>
+                    <span class="history-count"></span>
+                </div>
+                <div class="history-list"></div>
+            </div>
         </div>
-        <div class="history-list"></div>
-      </div>
-    </div>
-  </template>
+    </template>
 
-  <template id="answerTemplate">
-    <div class="screen">
-      <p class="eyebrow answer-label"></p>
-      <h2 class="screen-title">Answer the question</h2>
+    <template id="answerTemplate">
+        <div class="screen">
+            <p class="eyebrow answer-label"></p>
+            <h2 class="screen-title">Answer the question</h2>
 
-      <div class="question-quote">
-        <span class="quote-mark">“</span>
-        <p class="asked-question"></p>
-      </div>
+            <div class="question-quote">
+                <span class="quote-mark">“</span>
+                <p class="asked-question"></p>
+            </div>
 
-      <form class="answer-form">
-        <label for="answerInput">Your answer</label>
-        <textarea
-          id="answerInput"
-          rows="4"
-          maxlength="220"
-          placeholder="Your answer does not have to be yes or no."
-          required
-        ></textarea>
-        <div class="form-footer">
-          <p class="hint">Answer truthfully — any wording is allowed.</p>
-          <span class="answer-char-count">0 / 220</span>
+            <form class="answer-form">
+                <label for="answerInput">Your answer</label>
+                <textarea id="answerInput" rows="4" maxlength="220"
+                    placeholder="Your answer does not have to be yes or no." required></textarea>
+                <div class="form-footer">
+                    <p class="hint">Answer truthfully — any wording is allowed.</p>
+                    <span class="answer-char-count">0 / 220</span>
+                </div>
+                <p class="error answer-error" role="alert"></p>
+                <button class="primary-btn wide-btn" type="submit">Submit answer</button>
+            </form>
         </div>
-        <p class="error answer-error" role="alert"></p>
-        <button class="primary-btn wide-btn" type="submit">Submit answer</button>
-      </form>
-    </div>
-  </template>
+    </template>
 
-  <template id="resultTemplate">
-    <div class="screen centered">
-      <div class="winner-icon">★</div>
-      <p class="eyebrow">GAME OVER</p>
-      <h2 class="screen-title winner-title"></h2>
-      <p class="screen-copy winner-copy"></p>
-      <div class="reveal-box"></div>
-      <button class="primary-btn restart-btn">Play again</button>
-    </div>
-  </template>
+    <template id="resultTemplate">
+        <div class="screen centered">
+            <div class="winner-icon">★</div>
+            <p class="eyebrow">GAME OVER</p>
+            <h2 class="screen-title winner-title"></h2>
+            <p class="screen-copy winner-copy"></p>
+            <div class="reveal-box"></div>
+            <button class="primary-btn restart-btn">Play again</button>
+        </div>
+    </template>
 
-  <dialog id="rulesDialog">
-    <div class="dialog-inner">
-      <div class="dialog-header">
-        <h2>How to play</h2>
-        <button class="icon-btn close-dialog" aria-label="Close rules">×</button>
-      </div>
-      <ol>
-        <li>Each player secretly chooses a number from 1 to 50.</li>
-        <li>Players alternate turns.</li>
-        <li>On your turn, either ask one question or make one number guess.</li>
-        <li>Questions may be open-ended, but cannot contain digits or number words.</li>
-        <li>The opponent answers the question, then the turn switches.</li>
-        <li>A wrong number guess also ends the turn.</li>
-        <li>The first player to guess the opponent's secret number wins.</li>
-      </ol>
-    </div>
-  </dialog>
+    <dialog id="rulesDialog">
+        <div class="dialog-inner">
+            <div class="dialog-header">
+                <h2>How to play</h2>
+                <button class="icon-btn close-dialog" aria-label="Close rules">×</button>
+            </div>
+            <ol>
+                <li>Each player secretly chooses a number from 1 to 50.</li>
+                <li>Players alternate turns.</li>
+                <li>On your turn, either ask one question or make one number guess.</li>
+                <li>Questions may be open-ended, but cannot contain digits or number words.</li>
+                <li>The opponent answers the question, then the turn switches.</li>
+                <li>A wrong number guess also ends the turn.</li>
+                <li>The first player to guess the opponent's secret number wins.</li>
+            </ol>
+        </div>
+    </dialog>
 
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
+
 </html>
