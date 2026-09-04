@@ -113,8 +113,11 @@ function renderLobby(role, errorMessage = "") {
             }
         });
         label.textContent = "Lobby status"; input.classList.add("hidden"); input.removeAttribute("required");
-        range.classList.remove("hidden"); submit.textContent = "Waiting for opponent"; submit.disabled = true;
-        setStatus("Waiting for an opponent to join...");
+        range.classList.remove("hidden");
+        const opponentConnected = Boolean(game.connection && game.connection.open && game.names[1]);
+        submit.textContent = opponentConnected ? "Start duel" : "Waiting for opponent";
+        submit.disabled = !opponentConnected;
+        setStatus(opponentConnected ? `${playerName(1)} joined. Set the range when you are ready.` : "Waiting for an opponent to join...");
         if (errorMessage) errorText.textContent = errorMessage;
         form.addEventListener("submit", event => {
             event.preventDefault();
@@ -334,7 +337,8 @@ function renderWinner(winner, winningGuess) {
     gameCard.appendChild(view);
 }
 function resetForRematch() {
-    game.secrets = [null, null]; game.names = [game.nickname, null]; game.currentPlayer = 0;
+    const opponentName = game.names[1];
+    game.secrets = [null, null]; game.names = [game.nickname, opponentName]; game.currentPlayer = 0;
     game.maxNumber = DEFAULT_MAX_NUMBER; game.history = []; game.pendingQuestion = null;
     game.questionDraft = ""; game.phase = "lobby"; game.winner = null; game.winningGuess = null;
     send({ type: "rematch" }); renderLobby("host");
@@ -343,7 +347,7 @@ function resetGuestForRematch() {
     game.secrets = [null, null]; game.names[1] = game.nickname; game.currentPlayer = 0;
     game.maxNumber = DEFAULT_MAX_NUMBER; game.history = []; game.pendingQuestion = null;
     game.questionDraft = ""; game.phase = "lobby"; game.winner = null; game.winningGuess = null;
-    renderLobby("connected");
+    renderLobby("connected"); send({ type: "join", name: game.nickname });
 }
 function startRematch() {
     if (game.role === "host") resetForRematch();
