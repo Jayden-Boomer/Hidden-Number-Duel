@@ -2,7 +2,7 @@ const DEFAULT_MAX_NUMBER = 50;
 const MAX_ENDPOINT = 1000;
 const MAX_NICKNAME_LENGTH = 24;
 const LOBBY_COOKIE = "hidden-number-duel-lobby";
-const LOBBY_COOKIE_MAX_AGE = 1800;
+const LOBBY_COOKIE_MAX_AGE = 300;
 
 const game = {
     role: null,
@@ -19,7 +19,8 @@ const game = {
     questionDraft: "",
     phase: "lobby",
     winner: null,
-    winningGuess: null
+    winningGuess: null,
+    reconnecting: false
 };
 
 const gameCard = document.getElementById("gameCard");
@@ -44,12 +45,20 @@ function setStatus(message, isError = false) {
     const status = document.querySelector(".lobby-status");
     if (status) { status.textContent = message; status.classList.toggle("error", isError); }
 }
-function setLobbyCookie(lobbyCode) {
-    if (lobbyCode) document.cookie = `${LOBBY_COOKIE}=${encodeURIComponent(lobbyCode)}; Max-Age=${LOBBY_COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
+function setLobbyCookie(lobbyCode, nickname = game.nickname) {
+    if (lobbyCode && nickname) {
+        const value = encodeURIComponent(JSON.stringify({ nickname, lobbyCode }));
+        document.cookie = `${LOBBY_COOKIE}=${value}; Max-Age=${LOBBY_COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
+    }
 }
 function getLobbyCookie() {
     const cookie = document.cookie.split("; ").find(value => value.startsWith(`${LOBBY_COOKIE}=`));
-    return cookie ? decodeURIComponent(cookie.slice(LOBBY_COOKIE.length + 1)) : "";
+    if (!cookie) return null;
+    try {
+        const saved = JSON.parse(decodeURIComponent(cookie.slice(LOBBY_COOKIE.length + 1)));
+        if (typeof saved.nickname !== "string" || typeof saved.lobbyCode !== "string" || !saved.nickname || !saved.lobbyCode) return null;
+        return { nickname: saved.nickname, lobbyCode: saved.lobbyCode };
+    } catch { return null; }
 }
 function clearLobbyCookie() { document.cookie = `${LOBBY_COOKIE}=; Max-Age=0; Path=/; SameSite=Lax`; }
 function send(message) {
@@ -67,7 +76,13 @@ function broadcastState() { send(publicState()); }
 function watchPeerConnection() {
     game.peer.on("disconnected", () => {
         setStatus("PeerJS connection lost. Reconnecting...", true);
-        game.peer.reconnect();
+        if (game.role === "guest") {
+            const saved = getLobbyCookie();
+            if (saved && !game.reconnecting) {
+                game.reconnecting = true;
+                startJoining(saved.lobbyCode, { textContent: "" });
+            }
+        } else game.peer.reconnect();
     });
 }
 
@@ -94,6 +109,21 @@ function renderStart() {
     const joinField = gameCard.querySelector(".join-code-field");
     const nickname = gameCard.querySelector("#startNickname");
     const error = gameCard.querySelector(".error");
+    const savedLobby = getLobbyCookie();
+    if (savedLobby) {
+        const rejoinButton = document.createElement("button");
+        rejoinButton.type = "button";
+        rejoinButton.className = "ghost-btn wide-btn rejoin-btn";
+        rejoinButton.textContent = `Rejoin ${savedLobby.nickname}'s lobby`;
+        joinField.after(rejoinButton);
+        rejoinButton.addEventListener("click", () => {
+            nickname.value = savedLobby.nickname;
+            game.nickname = savedLobby.nickname;
+            modeButtons.find(button => button.dataset.mode === "join").click();
+            gameCard.querySelector("#hostCode").value = savedLobby.lobbyCode;
+            startJoining(savedLobby.lobbyCode, error);
+        });
+    }
     let selectedMode = "host";
     modeButtons.forEach(button => button.addEventListener("click", () => {
         selectedMode = button.dataset.mode;
@@ -182,6 +212,7 @@ function renderLobby(role, errorMessage = "") {
             const maxNumber = Number(rangeInput.value);
             if (!Number.isInteger(maxNumber) || maxNumber < 2 || maxNumber > MAX_ENDPOINT) { errorText.textContent = `Choose a whole-number endpoint from 2 to ${MAX_ENDPOINT}.`; return; }
             game.maxNumber = maxNumber; game.phase = "setup"; updateRangeDisplay();
+            setLobbyCookie(game.peer && game.peer.id, game.nickname);
             send({ type: "game-start", maxNumber, names: game.names }); renderSecretSetup();
         });
     } else if (role === "connecting" || role === "connected") {
@@ -212,6 +243,7 @@ function renderLobby(role, errorMessage = "") {
 function startHosting() {
     if (typeof Peer === "undefined") { renderLobby("host", "PeerJS could not load. Check your internet connection and try again."); return; }
     game.role = "host"; game.names = [game.nickname, null]; game.peer = new Peer(); renderLobby("host");
+    game.reconnecting = false;
     watchPeerConnection();
     game.peer.on("open", () => {
         setLobbyCookie(game.peer.id);
@@ -226,7 +258,11 @@ function startHosting() {
             else send(publicState());
         });
         connection.on("data", handleHostMessage);
-        connection.on("close", () => { game.connection = null; setStatus("Your opponent disconnected.", true); });
+        connection.on("close", () => {
+            if (game.connection !== connection) return;
+            game.connection = null;
+            setStatus("Your opponent disconnected.", true);
+        });
         connection.on("error", () => setStatus("The connection was interrupted.", true));
     });
     game.peer.on("error", error => setStatus(error.type === "peer-unavailable" ? "That lobby was not found." : "PeerJS could not connect.", true));
@@ -240,15 +276,18 @@ function startJoining(hostCode, errorElement) {
     game.connection = null; game.peer = new Peer(); renderLobby("connecting");
     watchPeerConnection();
     game.peer.on("open", () => {
-        game.connection = game.peer.connect(hostCode);
-        game.connection.on("open", () => send({ type: "join", name: game.nickname }));
-        game.connection.on("data", handleGuestMessage);
-        game.connection.on("error", () => setStatus("The connection was interrupted.", true));
-        game.connection.on("close", () => {
+        const connection = game.peer.connect(hostCode);
+        game.connection = connection;
+        connection.on("open", () => { game.reconnecting = false; send({ type: "join", name: game.nickname }); });
+        connection.on("data", handleGuestMessage);
+        connection.on("error", () => setStatus("The connection was interrupted.", true));
+        connection.on("close", () => {
+            if (game.connection !== connection) return;
             game.connection = null;
-            const savedLobbyCode = getLobbyCookie();
-            if (savedLobbyCode && game.role === "guest") {
-                startJoining(savedLobbyCode, { textContent: "" });
+            const savedLobby = getLobbyCookie();
+            if (savedLobby && game.role === "guest" && !game.reconnecting) {
+                game.reconnecting = true;
+                startJoining(savedLobby.lobbyCode, { textContent: "" });
             } else {
                 renderLobby("join", "The host connection was lost. Rejoin when ready.");
             }
@@ -279,7 +318,7 @@ function handleGuestMessage(message) {
         const copy = document.querySelector(".screen-copy");
         if (copy && game.phase === "setup") copy.textContent = `The host has locked their number. Choose your secret number from 1 to ${game.maxNumber}.`;
     } else if (message.type === "game-start") {
-        game.names = message.names; game.maxNumber = message.maxNumber; game.phase = "setup"; updateRangeDisplay(); renderSecretSetup();
+        game.names = message.names; game.maxNumber = message.maxNumber; game.phase = "setup"; setLobbyCookie(game.hostCode, game.nickname); updateRangeDisplay(); renderSecretSetup();
     } else if (message.type === "state") {
         Object.assign(game, message); updateRangeDisplay(); renderNetworkState();
     } else if (message.type === "rematch") {
@@ -434,7 +473,7 @@ function startRematch() {
 function resetGame() {
     if (game.connection) game.connection.close(); if (game.peer) game.peer.destroy();
     clearLobbyCookie();
-    game.role = null; game.peer = null; game.connection = null; game.hostCode = null; game.nickname = ""; game.secrets = [null, null]; game.names = [null, null]; game.currentPlayer = 0; game.maxNumber = DEFAULT_MAX_NUMBER; game.history = []; game.pendingQuestion = null; game.questionDraft = ""; game.phase = "lobby"; game.winner = null; game.winningGuess = null; renderStart();
+    game.role = null; game.peer = null; game.connection = null; game.hostCode = null; game.nickname = ""; game.secrets = [null, null]; game.names = [null, null]; game.currentPlayer = 0; game.maxNumber = DEFAULT_MAX_NUMBER; game.history = []; game.pendingQuestion = null; game.questionDraft = ""; game.phase = "lobby"; game.winner = null; game.winningGuess = null; game.reconnecting = false; renderStart();
 }
 document.querySelector(".close-dialog").addEventListener("click", () => rulesDialog.close());
 rulesDialog.addEventListener("click", event => { if (event.target === rulesDialog) rulesDialog.close(); });
