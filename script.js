@@ -5,6 +5,15 @@ const LOBBY_COOKIE = "hidden-number-duel-lobby";
 const LOBBY_COOKIE_MAX_AGE = 120;
 const NICKNAME_COOKIE = "hidden-number-duel-nickname";
 const NICKNAME_COOKIE_MAX_AGE = 315360000;
+const DEFAULT_ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
+
+function peerOptions() {
+    const configuredServers = window.HIDDEN_NUMBER_DUEL_TURN?.iceServers;
+    const iceServers = Array.isArray(configuredServers) && configuredServers.length
+        ? [...DEFAULT_ICE_SERVERS, ...configuredServers]
+        : DEFAULT_ICE_SERVERS;
+    return { config: { iceServers } };
+}
 
 const game = {
     role: null,
@@ -311,7 +320,7 @@ function startHosting(resumingMatch = false, lobbyCode = null) {
     game.role = "host";
     if (!resumingMatch) game.names = [game.nickname, null];
     game.takeoverHost = resumingMatch;
-    game.peer = lobbyCode ? new Peer(lobbyCode) : new Peer(); renderLobby("host");
+    game.peer = lobbyCode ? new Peer(lobbyCode, peerOptions()) : new Peer(peerOptions()); renderLobby("host");
     game.reconnecting = false;
     watchPeerConnection();
     game.peer.on("open", () => {
@@ -347,7 +356,7 @@ function startJoining(hostCode, errorElement) {
     setLobbyCookie(hostCode, game.nickname, savedLobby && savedLobby.lobbyCode === hostCode ? savedLobby.secret : null);
     if (savedLobby && Number.isInteger(savedLobby.secret)) game.secrets[1] = savedLobby.secret;
     if (game.peer && !game.peer.destroyed) game.peer.destroy();
-    game.connection = null; game.peer = new Peer(); renderLobby("connecting");
+    game.connection = null; game.peer = new Peer(peerOptions()); renderLobby("connecting");
     watchPeerConnection();
     game.peer.on("open", () => {
         const connection = game.peer.connect(hostCode);
