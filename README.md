@@ -1,6 +1,6 @@
 # Hidden-Number-Duel
 
-The game uses [PeerJS](https://peerjs.com/) through its browser CDN to create a direct two-player connection.
+The game uses [PeerJS](https://peerjs.com/) through its browser CDN to create a direct two-player connection. When a direct path is unavailable, WebRTC automatically uses the configured TURN relay.
 
 ## Playing online
 
@@ -10,6 +10,12 @@ The game uses [PeerJS](https://peerjs.com/) through its browser CDN to create a 
 4. The host selects the range endpoint. Both players then choose their secret number privately.
 
 PeerJS's public cloud signaling service is used by default. The game host keeps both secrets and validates guesses; secret numbers are never sent in ordinary synchronization messages. If the host disconnects, the guest creates a replacement lobby and becomes its owner. When the former host rejoins that lobby, their locally stored secret is exchanged once to restore validation for the resumed match.
+
+## TURN relay setup
+
+The browser cannot run a TURN server itself. This repository includes [`turnserver.conf.example`](turnserver.conf.example) for [coturn](https://github.com/coturn/coturn), which must run on a server with a public IP address. Copy it to `turnserver.conf`, set the public IP, realm, and a long random shared secret, then start coturn with that file.
+
+Create `turn-config.js` from [`turn-config.example.js`](turn-config.example.js) during deployment. Set `iceServers` to the coturn `turn:` and `turns:` URLs and provide short-lived credentials from your TURN credential service. Do not commit real TURN credentials. If `turn-config.js` is absent or has no servers, the game still works where direct WebRTC connectivity is possible.
 
 Rules implemented:
 
