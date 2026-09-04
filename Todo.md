@@ -4,7 +4,7 @@
 - [X] online multiplayer (p2p)
 - [ ] Notes
     - [ ] Players can write notes for themselves on the conversation history (i.e. Q:"Is a person this age able to drink" A:"yes" note:"↑21")
-    - [ ] guess option shows the notes on the slider
+    - [ ] guess option shows the notes on the slider / number line
 - [ ] more than 2 players in the lobby 
 - [ ] advanced lobby setup
     - [ ] game-mode selection
