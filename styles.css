@@ -227,6 +227,16 @@ select:focus {
 	letter-spacing: 0.12em;
 }
 
+.lobby-code-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.copy-code-btn {
+	margin-top: 20px;
+}
+
 .lobby-range {
 	margin-top: 18px;
 }
@@ -306,7 +316,6 @@ select:focus {
 	font-weight: 600;
 }
 
-.handoff-icon,
 .winner-icon {
 	display: grid;
 	place-items: center;
@@ -433,6 +442,25 @@ select:focus {
 	border: 1px solid var(--line);
 	border-radius: 16px;
 	background: #111620;
+}
+
+.own-number {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin: 0 0 24px;
+	padding: 14px 16px;
+	border: 1px solid rgba(37, 255, 199, 0.25);
+	border-radius: 14px;
+	background: rgba(37, 255, 199, 0.06);
+	color: var(--muted);
+	font-size: 0.88rem;
+}
+
+.own-secret-number {
+	color: var(--accent-2);
+	font-size: 1.2rem;
 }
 
 .quote-mark {

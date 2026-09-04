@@ -50,7 +50,10 @@
             <div class="step-badge lobby-badge"></div>
             <h2 class="screen-title lobby-title"></h2>
             <p class="screen-copy lobby-copy"></p>
-            <div class="lobby-code hidden"></div>
+            <div class="lobby-code-row">
+                <div class="lobby-code hidden"></div>
+                <button type="button" class="ghost-btn copy-code-btn hidden">Copy code</button>
+            </div>
             <form class="lobby-form secret-form">
                 <label class="lobby-input-label" for="lobbyInput"></label>
                 <input id="lobbyInput" type="text" maxlength="64" autocomplete="off" required />
@@ -89,11 +92,8 @@
 
     <template id="handoffTemplate">
         <div class="screen centered">
-            <div class="handoff-icon">↔</div>
-            <p class="eyebrow">PASS THE DEVICE</p>
             <h2 class="screen-title"></h2>
             <p class="screen-copy"></p>
-            <button class="primary-btn continue-btn">I'm ready</button>
         </div>
     </template>
 
@@ -157,6 +157,11 @@
             <div class="question-quote">
                 <span class="quote-mark">“</span>
                 <p class="asked-question"></p>
+            </div>
+
+            <div class="own-number">
+                <span>Your secret number</span>
+                <strong class="own-secret-number"></strong>
             </div>
 
             <form class="answer-form">

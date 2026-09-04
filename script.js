@@ -89,6 +89,7 @@ function renderLobby(role, errorMessage = "") {
     const title = view.querySelector(".lobby-title");
     const copy = view.querySelector(".lobby-copy");
     const code = view.querySelector(".lobby-code");
+    const copyCodeButton = view.querySelector(".copy-code-btn");
     const form = view.querySelector(".lobby-form");
     const input = view.querySelector("#lobbyInput");
     const range = view.querySelector(".lobby-range");
@@ -100,6 +101,16 @@ function renderLobby(role, errorMessage = "") {
         badge.textContent = "Host lobby"; title.textContent = "Your lobby is ready";
         copy.textContent = "Share this code with your opponent. When they arrive, choose the range and start the duel.";
         code.textContent = game.peer ? game.peer.id : "Connecting..."; code.classList.remove("hidden");
+        copyCodeButton.classList.remove("hidden");
+        copyCodeButton.addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(code.textContent);
+                copyCodeButton.textContent = "Copied";
+                setTimeout(() => { copyCodeButton.textContent = "Copy code"; }, 1600);
+            } catch {
+                setStatus("Copy failed. Select the lobby code and copy it manually.", true);
+            }
+        });
         label.textContent = "Lobby status"; input.classList.add("hidden"); input.removeAttribute("required");
         range.classList.remove("hidden"); submit.textContent = "Waiting for opponent"; submit.disabled = true;
         setStatus("Waiting for an opponent to join...");
@@ -108,7 +119,7 @@ function renderLobby(role, errorMessage = "") {
             event.preventDefault();
             const maxNumber = Number(rangeInput.value);
             if (!Number.isInteger(maxNumber) || maxNumber < 2 || maxNumber > MAX_ENDPOINT) { errorText.textContent = `Choose a whole-number endpoint from 2 to ${MAX_ENDPOINT}.`; return; }
-            game.maxNumber = maxNumber; game.phase = "setup";
+            game.maxNumber = maxNumber; game.phase = "setup"; updateRangeDisplay();
             send({ type: "game-start", maxNumber, names: game.names }); renderSecretSetup();
         });
     } else if (role === "connecting") {
@@ -217,7 +228,7 @@ function maybeStartGame() {
 function renderWaiting(title, copy) {
     gameCard.innerHTML = ""; const view = cloneTemplate("handoffTemplate");
     view.querySelector(".screen-title").textContent = title; view.querySelector(".screen-copy").textContent = copy;
-    view.querySelector(".continue-btn").classList.add("hidden"); gameCard.appendChild(view);
+    gameCard.appendChild(view);
 }
 function renderNetworkState() {
     if (game.phase === "setup") return renderSecretSetup();
@@ -270,6 +281,7 @@ function renderTurn() {
 function renderAnswer() {
     gameCard.innerHTML = ""; const view = cloneTemplate("answerTemplate"); const pending = game.pendingQuestion;
     view.querySelector(".answer-label").textContent = `${playerName(pending.answerer)} • answer about your secret number`; view.querySelector(".asked-question").textContent = pending.question;
+    view.querySelector(".own-secret-number").textContent = game.secrets[localPlayer()] ?? "hidden";
     const input = view.querySelector("#answerInput");
     view.querySelector(".answer-form").addEventListener("submit", event => { event.preventDefault(); const answer = input.value.trim(); if (!answer) view.querySelector(".answer-error").textContent = "Enter an answer first."; else submitAction({ type: "answer", answer }); });
     input.addEventListener("input", () => view.querySelector(".answer-char-count").textContent = `${input.value.length} / 220`); gameCard.appendChild(view); setTimeout(() => input.focus(), 0);
