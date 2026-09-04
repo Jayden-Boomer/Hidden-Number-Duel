@@ -627,6 +627,18 @@ dialog::backdrop {
 	font-size: 1.4rem;
 }
 
+button {
+	transition: filter 0.16s ease;
+}
+
+button:hover:not(:disabled) {
+	filter: brightness(1.35) saturate(1.1);
+}
+
+button:active:not(:disabled) {
+	filter: brightness(0.7) saturate(0.9);
+}
+
 dialog ol {
 	margin: 20px 0 0;
 	padding-left: 22px;
