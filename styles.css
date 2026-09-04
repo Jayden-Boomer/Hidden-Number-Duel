@@ -281,8 +281,34 @@ select:focus {
 	gap: 10px;
 }
 
-.copy-code-btn {
+.copy-code-btn,
+.share-link-btn {
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	padding: 0;
 	margin-top: 20px;
+}
+
+.copy-code-btn svg {
+	width: 20px;
+	height: 20px;
+	fill: none;
+	stroke: currentColor;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	stroke-width: 1.8;
+}
+
+.share-link-btn svg {
+	width: 20px;
+	height: 20px;
+	fill: none;
+	stroke: currentColor;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	stroke-width: 1.8;
 }
 
 .lobby-range {

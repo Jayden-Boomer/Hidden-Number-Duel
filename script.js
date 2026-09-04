@@ -111,6 +111,12 @@ function renderStart() {
         if (selectedMode === "host") startHosting();
         else startJoining(gameCard.querySelector("#hostCode").value.trim(), error);
     });
+    const sharedLobbyCode = new URLSearchParams(window.location.search).get("lobby");
+    if (sharedLobbyCode) {
+        const joinButton = modeButtons.find(button => button.dataset.mode === "join");
+        joinButton.click();
+        gameCard.querySelector("#hostCode").value = sharedLobbyCode;
+    }
     setTimeout(() => nickname.focus(), 0);
 }
 
@@ -123,6 +129,7 @@ function renderLobby(role, errorMessage = "") {
     const copy = view.querySelector(".lobby-copy");
     const code = view.querySelector(".lobby-code");
     const copyCodeButton = view.querySelector(".copy-code-btn");
+    const shareLinkButton = view.querySelector(".share-link-btn");
     const form = view.querySelector(".lobby-form");
     const input = view.querySelector("#lobbyInput");
     const range = view.querySelector(".lobby-range");
@@ -135,13 +142,32 @@ function renderLobby(role, errorMessage = "") {
         copy.textContent = "Share this code with your opponent. When they arrive, choose the range and start the duel.";
         code.textContent = game.peer ? game.peer.id : "Connecting..."; code.classList.remove("hidden");
         copyCodeButton.classList.remove("hidden");
+        shareLinkButton.classList.remove("hidden");
         copyCodeButton.addEventListener("click", async () => {
             try {
                 await navigator.clipboard.writeText(code.textContent);
-                copyCodeButton.textContent = "Copied";
-                setTimeout(() => { copyCodeButton.textContent = "Copy code"; }, 1600);
+                copyCodeButton.setAttribute("aria-label", "Lobby code copied");
+                copyCodeButton.title = "Lobby code copied";
+                setTimeout(() => {
+                    copyCodeButton.setAttribute("aria-label", "Copy lobby code");
+                    copyCodeButton.title = "Copy lobby code";
+                }, 1600);
             } catch {
                 setStatus("Copy failed. Select the lobby code and copy it manually.", true);
+            }
+        });
+        shareLinkButton.addEventListener("click", async () => {
+            const inviteUrl = new URL(window.location.href);
+            inviteUrl.search = "";
+            inviteUrl.searchParams.set("lobby", code.textContent);
+            try {
+                if (navigator.share) await navigator.share({ title: "Hidden Number Duel", text: "Join my duel", url: inviteUrl.href });
+                else {
+                    await navigator.clipboard.writeText(inviteUrl.href);
+                    setStatus("Share link copied to your clipboard.");
+                }
+            } catch (error) {
+                if (error.name !== "AbortError") setStatus("Could not share the lobby link.", true);
             }
         });
         label.textContent = "Lobby status"; input.classList.add("hidden"); input.removeAttribute("required");

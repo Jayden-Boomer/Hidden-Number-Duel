@@ -52,7 +52,22 @@
             <p class="screen-copy lobby-copy"></p>
             <div class="lobby-code-row">
                 <div class="lobby-code hidden"></div>
-                <button type="button" class="ghost-btn copy-code-btn hidden">Copy code</button>
+                <button type="button" class="icon-btn copy-code-btn hidden" aria-label="Copy lobby code"
+                    title="Copy lobby code">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                        <rect x="8" y="8" width="11" height="12" rx="2"></rect>
+                        <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2"></path>
+                    </svg>
+                </button>
+                <button type="button" class="icon-btn share-link-btn hidden" aria-label="Share lobby link"
+                    title="Share lobby link">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                        <circle cx="18" cy="5" r="2.5"></circle>
+                        <circle cx="6" cy="12" r="2.5"></circle>
+                        <circle cx="18" cy="19" r="2.5"></circle>
+                        <path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"></path>
+                    </svg>
+                </button>
             </div>
             <form class="lobby-form secret-form">
                 <label class="lobby-input-label" for="lobbyInput"></label>
