@@ -13,6 +13,7 @@ const game = {
     maxNumber: DEFAULT_MAX_NUMBER,
     history: [],
     pendingQuestion: null,
+    questionDraft: "",
     phase: "lobby",
     winner: null,
     winningGuess: null
@@ -122,16 +123,20 @@ function renderLobby(role, errorMessage = "") {
             game.maxNumber = maxNumber; game.phase = "setup"; updateRangeDisplay();
             send({ type: "game-start", maxNumber, names: game.names }); renderSecretSetup();
         });
-    } else if (role === "connecting") {
+    } else if (role === "connecting" || role === "connected") {
         badge.textContent = "Join lobby";
-        title.textContent = "Joining lobby";
-        copy.textContent = "Your lobby code was submitted. We are connecting you to the host now.";
+        title.textContent = role === "connected" ? "Lobby joined" : "Joining lobby";
+        copy.textContent = role === "connected"
+            ? `You are connected to ${playerName(0)}. Wait for the host to choose the range and start the duel.`
+            : "Your lobby code was submitted. We are connecting you to the host now.";
         label.textContent = "Connection status";
         input.classList.add("hidden");
         input.removeAttribute("required");
         submit.classList.add("hidden");
         errorText.textContent = errorMessage;
-        view.querySelector(".lobby-status").textContent = "Connecting to the host...";
+        view.querySelector(".lobby-status").textContent = role === "connected"
+            ? "Connected. Waiting for the host to start..."
+            : "Connecting to the host...";
     } else {
         badge.textContent = "Join lobby"; title.textContent = "Connect to your opponent";
         copy.textContent = "Enter the host code exactly as it appears on their screen.";
@@ -178,6 +183,7 @@ function handleHostMessage(message) {
         if (submit) { submit.disabled = false; submit.textContent = "Start duel"; }
         setStatus(`${playerName(1)} joined. Set the range when you are ready.`);
     } else if (message.type === "secret-set") { game.secrets[1] = message.secret; maybeStartGame(); }
+    else if (message.type === "rematch-request") resetForRematch();
     else if (message.type === "action") processAction(message.action, 1);
 }
 function handleGuestMessage(message) {
@@ -195,6 +201,8 @@ function handleGuestMessage(message) {
         game.names = message.names; game.maxNumber = message.maxNumber; game.phase = "setup"; updateRangeDisplay(); renderSecretSetup();
     } else if (message.type === "state") {
         Object.assign(game, message); updateRangeDisplay(); renderNetworkState();
+    } else if (message.type === "rematch") {
+        resetGuestForRematch();
     }
 }
 
@@ -239,12 +247,26 @@ function renderNetworkState() {
         return;
     }
     if (game.currentPlayer === localPlayer()) renderTurn();
-    else renderWaiting("Opponent's turn", `${playerName(game.currentPlayer)} is deciding whether to ask a question or make a guess.`);
+    else {
+        const latestAnswer = [...game.history].reverse().find(item => item.type === "question");
+        if (latestAnswer && latestAnswer.answerer === game.currentPlayer) {
+            renderWaiting(
+                `You asked: “${latestAnswer.question}”`,
+                `${playerName(latestAnswer.answerer)} answered: “${latestAnswer.answer}.”\nWaiting for ${playerName(latestAnswer.answerer)}'s next question.`
+            );
+        } else {
+            renderWaiting("Opponent's turn", `${playerName(game.currentPlayer)} is deciding whether to ask a question or make a guess.`);
+        }
+    }
 }
 function containsForbiddenNumber(text) {
     if (/\d/.test(text)) return true;
     const words = text.toLowerCase().replace(/[^a-z\s-]/g, " ").replace(/-/g, " ").split(/\s+/).filter(Boolean);
     return words.some(word => numberWords.has(word));
+}
+function saveQuestionDraft() {
+    const questionInput = document.querySelector("#questionInput");
+    if (questionInput) game.questionDraft = questionInput.value;
 }
 function submitAction(action) { if (game.role === "host") processAction(action, 0); else send({ type: "action", action }); }
 function processAction(action, player) {
@@ -262,17 +284,24 @@ function processAction(action, player) {
 }
 
 function renderTurn() {
+    saveQuestionDraft();
     gameCard.innerHTML = ""; const view = cloneTemplate("turnTemplate");
     view.querySelector(".turn-label").textContent = `${playerName(game.currentPlayer)}'s turn • trying to find ${playerName(opponentOf(game.currentPlayer))}'s number`;
     const tabs = [...view.querySelectorAll(".mode-tab")]; const questionPanel = view.querySelector(".question-panel"); const guessPanel = view.querySelector(".guess-panel");
     tabs.forEach(tab => tab.addEventListener("click", () => { tabs.forEach(item => item.classList.toggle("active", item === tab)); const isQuestion = tab.dataset.mode === "question"; questionPanel.classList.toggle("hidden", !isQuestion); guessPanel.classList.toggle("hidden", isQuestion); }));
     const questionInput = view.querySelector("#questionInput"); const questionError = view.querySelector(".question-error");
-    questionInput.addEventListener("input", () => { view.querySelector(".char-count").textContent = `${questionInput.value.length} / 180`; questionError.textContent = ""; });
+    questionInput.value = game.questionDraft;
+    view.querySelector(".char-count").textContent = `${questionInput.value.length} / 180`;
+    questionInput.addEventListener("input", () => {
+        game.questionDraft = questionInput.value;
+        view.querySelector(".char-count").textContent = `${questionInput.value.length} / 180`;
+        questionError.textContent = "";
+    });
     view.querySelector(".question-form").addEventListener("submit", event => {
         event.preventDefault(); const question = questionInput.value.trim();
         if (!question) questionError.textContent = "Enter a question first.";
         else if (containsForbiddenNumber(question)) questionError.textContent = "Questions cannot contain digits or number words. Rephrase it without numbers.";
-        else submitAction({ type: "question", question });
+        else { game.questionDraft = ""; submitAction({ type: "question", question }); }
     });
     const guessInput = view.querySelector("#guessInput"); const guessError = view.querySelector(".guess-error"); guessInput.max = game.maxNumber;
     view.querySelector(".guess-form").addEventListener("submit", event => { event.preventDefault(); const guess = Number(guessInput.value); if (!Number.isInteger(guess) || guess < 1 || guess > game.maxNumber) guessError.textContent = `Enter a whole number from 1 to ${game.maxNumber}.`; else submitAction({ type: "guess", guess }); });
@@ -300,11 +329,29 @@ function renderWinner(winner, winningGuess) {
     gameCard.innerHTML = ""; const view = cloneTemplate("resultTemplate");
     view.querySelector(".winner-title").textContent = `${playerName(winner)} wins!`; view.querySelector(".winner-copy").textContent = `${winningGuess} was the correct guess.`;
     view.querySelector(".reveal-box").textContent = `Final numbers\n${playerName(0)} chose ${game.secrets[0] ?? "hidden"}\n${playerName(1)} chose ${game.secrets[1] ?? "hidden"}`;
-    view.querySelector(".restart-btn").addEventListener("click", resetGame); gameCard.appendChild(view);
+    view.querySelector(".play-again-btn").addEventListener("click", startRematch);
+    view.querySelector(".exit-lobby-btn").addEventListener("click", resetGame);
+    gameCard.appendChild(view);
+}
+function resetForRematch() {
+    game.secrets = [null, null]; game.names = [game.nickname, null]; game.currentPlayer = 0;
+    game.maxNumber = DEFAULT_MAX_NUMBER; game.history = []; game.pendingQuestion = null;
+    game.questionDraft = ""; game.phase = "lobby"; game.winner = null; game.winningGuess = null;
+    send({ type: "rematch" }); renderLobby("host");
+}
+function resetGuestForRematch() {
+    game.secrets = [null, null]; game.names[1] = game.nickname; game.currentPlayer = 0;
+    game.maxNumber = DEFAULT_MAX_NUMBER; game.history = []; game.pendingQuestion = null;
+    game.questionDraft = ""; game.phase = "lobby"; game.winner = null; game.winningGuess = null;
+    renderLobby("connected");
+}
+function startRematch() {
+    if (game.role === "host") resetForRematch();
+    else { send({ type: "rematch-request" }); renderWaiting("Rematch requested", "Waiting for the host to open a new game."); }
 }
 function resetGame() {
     if (game.connection) game.connection.close(); if (game.peer) game.peer.destroy();
-    game.role = null; game.peer = null; game.connection = null; game.nickname = ""; game.secrets = [null, null]; game.names = [null, null]; game.currentPlayer = 0; game.maxNumber = DEFAULT_MAX_NUMBER; game.history = []; game.pendingQuestion = null; game.phase = "lobby"; game.winner = null; game.winningGuess = null; renderStart();
+    game.role = null; game.peer = null; game.connection = null; game.nickname = ""; game.secrets = [null, null]; game.names = [null, null]; game.currentPlayer = 0; game.maxNumber = DEFAULT_MAX_NUMBER; game.history = []; game.pendingQuestion = null; game.questionDraft = ""; game.phase = "lobby"; game.winner = null; game.winningGuess = null; renderStart();
 }
 document.querySelector(".close-dialog").addEventListener("click", () => rulesDialog.close());
 rulesDialog.addEventListener("click", event => { if (event.target === rulesDialog) rulesDialog.close(); });

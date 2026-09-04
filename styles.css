@@ -147,6 +147,7 @@ h1 {
 	margin: 12px 0 28px;
 	color: var(--muted);
 	line-height: 1.65;
+	white-space: pre-line;
 }
 
 .step-badge {
@@ -488,6 +489,14 @@ select:focus {
 	color: #dbeafe;
 	line-height: 1.65;
 	white-space: pre-line;
+}
+
+.result-actions {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	flex-wrap: wrap;
 }
 
 dialog {
