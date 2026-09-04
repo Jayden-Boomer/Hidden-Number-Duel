@@ -4,6 +4,7 @@
 - [X] online multiplayer (p2p)
 - [ ] more than 2 players in the lobby (you can choose which other player to ask your question)
 - [ ] gamemodes:
+    - [X] Duel: 2 players take turns trying to guess each others' number
     - [ ] FFA: each player is randomly assigned a number in the range and can see the other players' numbers
     - [ ] Elimination (checkbox): players who guess incorrectly are eliminated (loose if only 2p)
     - [ ] KOTH: If another player guesses your number you are out
