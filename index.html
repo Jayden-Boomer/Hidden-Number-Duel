@@ -91,9 +91,10 @@
             <p class="screen-copy"></p>
 
             <form class="secret-form">
-                <label for="nicknameInput">Your nickname</label>
-                <input id="nicknameInput" type="text" maxlength="24" autocomplete="nickname" required />
-                <p class="hint">Choose the name the other player will see.</p>
+                <div class="player-name-display">
+                    <span>Playing as</span>
+                    <strong id="setupNickname"></strong>
+                </div>
                 <label for="secretInput">Your secret number</label>
                 <div class="number-row">
                     <input id="secretInput" type="number" min="1" inputmode="numeric" required />

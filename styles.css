@@ -215,6 +215,24 @@ select:focus {
 	margin-top: 28px;
 }
 
+.player-name-display {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 24px;
+	padding: 14px 16px;
+	border: 1px solid var(--line);
+	border-radius: 14px;
+	background: #111620;
+	color: var(--muted);
+	font-size: 0.88rem;
+}
+
+.player-name-display strong {
+	color: var(--text);
+}
+
 .lobby-mode-label {
 	display: block;
 	margin: 22px 0 9px;

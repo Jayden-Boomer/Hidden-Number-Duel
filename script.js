@@ -2,7 +2,9 @@ const DEFAULT_MAX_NUMBER = 50;
 const MAX_ENDPOINT = 1000;
 const MAX_NICKNAME_LENGTH = 24;
 const LOBBY_COOKIE = "hidden-number-duel-lobby";
-const LOBBY_COOKIE_MAX_AGE = 604800;
+const LOBBY_COOKIE_MAX_AGE = 120;
+const NICKNAME_COOKIE = "hidden-number-duel-nickname";
+const NICKNAME_COOKIE_MAX_AGE = 315360000;
 
 const game = {
     role: null,
@@ -46,6 +48,16 @@ function updateRangeDisplay() {
 function setStatus(message, isError = false) {
     const status = document.querySelector(".lobby-status");
     if (status) { status.textContent = message; status.classList.toggle("error", isError); }
+}
+function setNicknameCookie(nickname) {
+    if (nickname) document.cookie = `${NICKNAME_COOKIE}=${encodeURIComponent(nickname)}; Max-Age=${NICKNAME_COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
+}
+function getNicknameCookie() {
+    const cookie = document.cookie.split("; ").find(value => value.startsWith(`${NICKNAME_COOKIE}=`));
+    if (!cookie) return "";
+    try {
+        return decodeURIComponent(cookie.slice(NICKNAME_COOKIE.length + 1)).slice(0, MAX_NICKNAME_LENGTH);
+    } catch { return ""; }
 }
 function showHandoffDialog(copy) {
     handoffDialog.querySelector(".handoff-copy").textContent = copy;
@@ -160,6 +172,7 @@ function renderStart() {
     const joinField = gameCard.querySelector(".join-code-field");
     const nickname = gameCard.querySelector("#startNickname");
     const error = gameCard.querySelector(".error");
+    nickname.value = getNicknameCookie();
     const savedLobby = getLobbyCookie();
     if (savedLobby) {
         const rejoinButton = document.createElement("button");
@@ -189,6 +202,7 @@ function renderStart() {
         event.preventDefault();
         game.nickname = nickname.value.trim().slice(0, MAX_NICKNAME_LENGTH);
         if (!game.nickname) { error.textContent = "Enter a nickname first."; nickname.focus(); return; }
+        setNicknameCookie(game.nickname);
         if (selectedMode === "host") startHosting();
         else startJoining(gameCard.querySelector("#hostCode").value.trim(), error);
     });
@@ -410,8 +424,8 @@ function renderSecretSetup() {
     view.querySelector(".step-badge").textContent = "Secret number";
     view.querySelector(".screen-title").textContent = "Choose your secret number";
     view.querySelector(".screen-copy").textContent = `Pick any whole number from 1 to ${game.maxNumber}. Your opponent will never receive it.`;
-    const form = view.querySelector(".secret-form"); const nicknameInput = view.querySelector("#nicknameInput");
-    nicknameInput.value = game.nickname; nicknameInput.readOnly = true;
+    view.querySelector("#setupNickname").textContent = game.nickname;
+    const form = view.querySelector(".secret-form");
     const input = view.querySelector("#secretInput"); const error = view.querySelector(".error"); input.max = game.maxNumber;
     form.addEventListener("submit", event => {
         event.preventDefault(); const value = Number(input.value);
