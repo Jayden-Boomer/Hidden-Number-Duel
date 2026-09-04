@@ -80,23 +80,35 @@ function renderStart() {
         <form class="secret-form start-form">
             <label for="startNickname">Your nickname</label>
             <input id="startNickname" type="text" maxlength="${MAX_NICKNAME_LENGTH}" autocomplete="nickname" required />
-            <label for="lobbyChoice">Lobby mode</label>
-            <select id="lobbyChoice" required><option value="host">Host lobby</option><option value="join">Join lobby</option></select>
+            <span class="lobby-mode-label">Lobby mode</span>
+            <div class="lobby-mode-buttons" role="group" aria-label="Lobby mode">
+                <button type="button" class="lobby-mode-btn active" data-mode="host" aria-pressed="true">Host lobby</button>
+                <button type="button" class="lobby-mode-btn" data-mode="join" aria-pressed="false">Join lobby</button>
+            </div>
             <div class="join-code-field hidden"><label for="hostCode">Host lobby code</label><input id="hostCode" type="text" maxlength="64" autocomplete="off" placeholder="Paste the host code" /></div>
             <p class="error" role="alert"></p><button type="submit" class="primary-btn wide-btn">Continue</button>
         </form>
     </div>`;
     const form = gameCard.querySelector(".start-form");
-    const choice = gameCard.querySelector("#lobbyChoice");
+    const modeButtons = [...gameCard.querySelectorAll(".lobby-mode-btn")];
     const joinField = gameCard.querySelector(".join-code-field");
     const nickname = gameCard.querySelector("#startNickname");
     const error = gameCard.querySelector(".error");
-    choice.addEventListener("change", () => joinField.classList.toggle("hidden", choice.value !== "join"));
+    let selectedMode = "host";
+    modeButtons.forEach(button => button.addEventListener("click", () => {
+        selectedMode = button.dataset.mode;
+        modeButtons.forEach(modeButton => {
+            const isActive = modeButton === button;
+            modeButton.classList.toggle("active", isActive);
+            modeButton.setAttribute("aria-pressed", String(isActive));
+        });
+        joinField.classList.toggle("hidden", selectedMode !== "join");
+    }));
     form.addEventListener("submit", event => {
         event.preventDefault();
         game.nickname = nickname.value.trim().slice(0, MAX_NICKNAME_LENGTH);
         if (!game.nickname) { error.textContent = "Enter a nickname first."; nickname.focus(); return; }
-        if (choice.value === "host") startHosting();
+        if (selectedMode === "host") startHosting();
         else startJoining(gameCard.querySelector("#hostCode").value.trim(), error);
     });
     setTimeout(() => nickname.focus(), 0);

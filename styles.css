@@ -215,6 +215,53 @@ select:focus {
 	margin-top: 28px;
 }
 
+.lobby-mode-label {
+	display: block;
+	margin: 22px 0 9px;
+	color: #dce4ef;
+	font-size: 0.91rem;
+	font-weight: 700;
+}
+
+.lobby-mode-buttons {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px;
+	padding: 5px;
+	border: 1px solid var(--line);
+	border-radius: 14px;
+	background: #10151e;
+}
+
+.lobby-mode-btn {
+	min-height: 44px;
+	padding: 10px 14px;
+	border: 0;
+	border-radius: 10px;
+	background: transparent;
+	color: var(--muted);
+	font-weight: 700;
+	transition:
+		transform 0.16s ease,
+		background 0.16s ease,
+		color 0.16s ease;
+}
+
+.lobby-mode-btn:hover {
+	color: var(--text);
+}
+
+.lobby-mode-btn.active {
+	background: var(--panel-2);
+	color: var(--text);
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.lobby-mode-btn:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
 .lobby-code {
 	width: fit-content;
 	margin: 24px 0 4px;
