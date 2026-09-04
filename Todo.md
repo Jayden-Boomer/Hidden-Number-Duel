@@ -2,9 +2,21 @@
 - [X] add range selection capability
 - [x] add gamertag/name/nickname selection
 - [X] online multiplayer (p2p)
-- [ ] more than 2 players in the lobby (you can choose which other player to ask your question)
-- [ ] gamemodes:
+- [ ] Notes
+    - [ ] Players can write notes for themselves on the conversation history (i.e. Q:"Is a person this age able to drink" A:"yes" note:"↑21")
+    - [ ] guess option shows the notes on the slider
+- [ ] more than 2 players in the lobby 
+- [ ] advanced lobby setup
+    - [ ] game-mode selection
+    - [ ] difficulty selection
+    - [ ] show names of players in the lobby in the top right corner
+    - [ ] guests can see the setup values the host has chosen
+    - [ ] guests can vote-on/request setup values
+- [ ] game-modes:
     - [X] Duel: 2 players take turns trying to guess each others' number
-    - [ ] FFA: each player is randomly assigned a number in the range and can see the other players' numbers
-    - [ ] Elimination (checkbox): players who guess incorrectly are eliminated (loose if only 2p)
+    - [ ] FFA: each player is randomly assigned a number in the range and can see the other players' numbers (players can choose which other player to ask their question (if more than 2 players in lobby)
     - [ ] KOTH: If another player guesses your number you are out
+- [ ] difficulties:
+    - [ ] Peaceful: unlimited guesses
+    - [ ] Limited Guesses: number of guesses chosen by host
+    - [ ] Elimination: players who guess incorrectly are eliminated (loose if only 2p) 
