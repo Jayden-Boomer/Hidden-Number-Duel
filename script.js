@@ -523,8 +523,14 @@ function renderTurn() {
         else if (containsForbiddenNumber(question)) questionError.textContent = "Questions cannot contain digits or number words. Rephrase it without numbers.";
         else { game.questionDraft = ""; submitAction({ type: "question", question }); }
     });
-    const guessInput = view.querySelector("#guessInput"); const guessError = view.querySelector(".guess-error"); guessInput.max = game.maxNumber;
-    view.querySelector(".guess-form").addEventListener("submit", event => { event.preventDefault(); const guess = Number(guessInput.value); if (!Number.isInteger(guess) || guess < 1 || guess > game.maxNumber) guessError.textContent = `Enter a whole number from 1 to ${game.maxNumber}.`; else submitAction({ type: "guess", guess }); });
+    const guessInput = view.querySelector("#guessInput"); const guessValue = view.querySelector("#guessValue"); const guessError = view.querySelector(".guess-error"); guessInput.max = game.maxNumber; guessValue.max = game.maxNumber;
+    guessInput.addEventListener("input", () => { guessValue.value = guessInput.value; });
+    guessValue.addEventListener("input", () => {
+        let value = Number(guessValue.value);
+        if (value > game.maxNumber) { value = game.maxNumber; guessValue.value = value; }
+        if (Number.isInteger(value) && value >= 1 && value <= game.maxNumber) guessInput.value = value;
+    });
+    view.querySelector(".guess-form").addEventListener("submit", event => { event.preventDefault(); const guess = Number(guessValue.value); if (!Number.isInteger(guess) || guess < 1 || guess > game.maxNumber) guessError.textContent = `Enter a whole number from 1 to ${game.maxNumber}.`; else { guessInput.value = guess; submitAction({ type: "guess", guess }); } });
     view.querySelector(".rules-btn").addEventListener("click", () => rulesDialog.showModal()); renderHistoryInto(view); gameCard.appendChild(view); setTimeout(() => questionInput.focus(), 0);
 }
 function renderAnswer() {

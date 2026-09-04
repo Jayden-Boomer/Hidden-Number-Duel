@@ -146,8 +146,12 @@
             <div class="mode-panel guess-panel hidden">
                 <form class="guess-form">
                     <label for="guessInput">Your guess</label>
+                    <div class="guess-slider-row">
+                        <input id="guessInput" class="guess-slider" type="range" min="1" value="1" />
+                        <input id="guessValue" class="guess-value-input" type="number" min="1" value="1"
+                            inputmode="numeric" aria-label="Selected guess" />
+                    </div>
                     <div class="number-row">
-                        <input id="guessInput" type="number" min="1" inputmode="numeric" required />
                         <button class="primary-btn" type="submit">Submit guess</button>
                     </div>
                     <p class="hint">A wrong guess ends your turn.</p>
