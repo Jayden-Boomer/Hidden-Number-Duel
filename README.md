@@ -9,7 +9,7 @@ The game uses [PeerJS](https://peerjs.com/) through its browser CDN to create a 
 3. The other player enters a nickname, chooses **Join lobby**, and enters that code.
 4. The host selects the range endpoint. Both players then choose their secret number privately.
 
-PeerJS's public cloud signaling service is used by default. The game host keeps both secrets and validates guesses; secret numbers are never sent in synchronization messages.
+PeerJS's public cloud signaling service is used by default. The game host keeps both secrets and validates guesses; secret numbers are never sent in ordinary synchronization messages. If the host disconnects, the guest creates a replacement lobby and becomes its owner. When the former host rejoins that lobby, their locally stored secret is exchanged once to restore validation for the resumed match.
 
 Rules implemented:
 
