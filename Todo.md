@@ -1,7 +1,7 @@
 - [ ] update color hard coding
-- [ ] add range selection capability
+- [X] add range selection capability
 - [x] add gamertag/name/nickname selection
-- [ ] online multiplayer (p2p)
+- [X] online multiplayer (p2p)
 - [ ] more than 2 players in the lobby (you can choose which other player to ask your question)
 - [ ] gamemodes:
     - [ ] FFA: each player is randomly assigned a number in the range and can see the other players' numbers
