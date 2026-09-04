@@ -1,5 +1,16 @@
 # Hidden-Number-Duel
 
+The game uses [PeerJS](https://peerjs.com/) through its browser CDN to create a direct two-player connection.
+
+## Playing online
+
+1. Serve this folder from a local web server or open the deployed site over HTTPS.
+2. One player enters a nickname and chooses **Host lobby**, then shares the displayed lobby code.
+3. The other player enters a nickname, chooses **Join lobby**, and enters that code.
+4. The host selects the range endpoint. Both players then choose their secret number privately.
+
+PeerJS's public cloud signaling service is used by default. The game host keeps both secrets and validates guesses; secret numbers are never sent in synchronization messages.
+
 Rules implemented:
 
 - The first player chooses the range endpoint, from 2 to 1000.

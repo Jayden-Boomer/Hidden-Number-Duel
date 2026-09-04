@@ -13,7 +13,7 @@
     <main class="app-shell">
         <header class="hero">
             <div>
-                <p class="eyebrow">2 PLAYER • PASS & PLAY</p>
+                <p class="eyebrow">2 PLAYER • ONLINE DUEL</p>
                 <h1>Hidden Number Duel</h1>
                 <p class="subtitle">
                     Discover your opponent's secret number using questions that contain no numbers.
@@ -41,6 +41,27 @@
                 </div>
                 <p class="hint">The range will be from 1 to this endpoint.</p>
                 <p class="error" role="alert"></p>
+            </form>
+        </div>
+    </template>
+
+    <template id="lobbyTemplate">
+        <div class="screen">
+            <div class="step-badge lobby-badge"></div>
+            <h2 class="screen-title lobby-title"></h2>
+            <p class="screen-copy lobby-copy"></p>
+            <div class="lobby-code hidden"></div>
+            <form class="lobby-form secret-form">
+                <label class="lobby-input-label" for="lobbyInput"></label>
+                <input id="lobbyInput" type="text" maxlength="64" autocomplete="off" required />
+                <div class="lobby-range hidden">
+                    <label for="lobbyRangeInput">Range endpoint</label>
+                    <input id="lobbyRangeInput" type="number" min="2" max="1000" value="50" inputmode="numeric"
+                        required />
+                </div>
+                <p class="lobby-status" role="status"></p>
+                <p class="error" role="alert"></p>
+                <button type="submit" class="primary-btn wide-btn lobby-submit"></button>
             </form>
         </div>
     </template>
@@ -181,6 +202,7 @@
         </div>
     </dialog>
 
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="script.js"></script>
 </body>
 
