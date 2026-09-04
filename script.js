@@ -1,11 +1,14 @@
 const DEFAULT_MAX_NUMBER = 50;
 const MAX_ENDPOINT = 1000;
 const MAX_NICKNAME_LENGTH = 24;
+const LOBBY_COOKIE = "hidden-number-duel-lobby";
+const LOBBY_COOKIE_MAX_AGE = 1800;
 
 const game = {
     role: null,
     peer: null,
     connection: null,
+    hostCode: null,
     nickname: "",
     secrets: [null, null],
     names: [null, null],
@@ -41,7 +44,18 @@ function setStatus(message, isError = false) {
     const status = document.querySelector(".lobby-status");
     if (status) { status.textContent = message; status.classList.toggle("error", isError); }
 }
-function send(message) { if (game.connection && game.connection.open) game.connection.send(message); }
+function setLobbyCookie(lobbyCode) {
+    if (lobbyCode) document.cookie = `${LOBBY_COOKIE}=${encodeURIComponent(lobbyCode)}; Max-Age=${LOBBY_COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
+}
+function getLobbyCookie() {
+    const cookie = document.cookie.split("; ").find(value => value.startsWith(`${LOBBY_COOKIE}=`));
+    return cookie ? decodeURIComponent(cookie.slice(LOBBY_COOKIE.length + 1)) : "";
+}
+function clearLobbyCookie() { document.cookie = `${LOBBY_COOKIE}=; Max-Age=0; Path=/; SameSite=Lax`; }
+function send(message) {
+    setLobbyCookie(game.hostCode || (game.peer && game.peer.id));
+    if (game.connection && game.connection.open) game.connection.send(message);
+}
 function publicState() {
     return {
         type: "state", names: game.names, maxNumber: game.maxNumber, currentPlayer: game.currentPlayer,
@@ -50,6 +64,12 @@ function publicState() {
     };
 }
 function broadcastState() { send(publicState()); }
+function watchPeerConnection() {
+    game.peer.on("disconnected", () => {
+        setStatus("PeerJS connection lost. Reconnecting...", true);
+        game.peer.reconnect();
+    });
+}
 
 function renderStart() {
     document.querySelector(".range-pill").classList.add("hidden");
@@ -143,7 +163,8 @@ function renderLobby(role, errorMessage = "") {
     } else {
         badge.textContent = "Join lobby"; title.textContent = "Connect to your opponent";
         copy.textContent = "Enter the host code exactly as it appears on their screen.";
-        label.textContent = "Host lobby code"; input.placeholder = "Paste the host code"; submit.textContent = "Join lobby";
+        label.textContent = "Host lobby code"; input.placeholder = "Paste the host code"; input.value = game.hostCode || "";
+        submit.textContent = game.hostCode ? "Rejoin lobby" : "Join lobby";
         if (errorMessage) errorText.textContent = errorMessage;
         form.addEventListener("submit", event => { event.preventDefault(); startJoining(input.value.trim(), errorText); });
     }
@@ -153,13 +174,21 @@ function renderLobby(role, errorMessage = "") {
 function startHosting() {
     if (typeof Peer === "undefined") { renderLobby("host", "PeerJS could not load. Check your internet connection and try again."); return; }
     game.role = "host"; game.names = [game.nickname, null]; game.peer = new Peer(); renderLobby("host");
-    game.peer.on("open", () => { const code = document.querySelector(".lobby-code"); if (code) code.textContent = game.peer.id; });
+    watchPeerConnection();
+    game.peer.on("open", () => {
+        setLobbyCookie(game.peer.id);
+        const code = document.querySelector(".lobby-code");
+        if (code) code.textContent = game.peer.id;
+    });
     game.peer.on("connection", connection => {
-        if (game.connection) { connection.close(); return; }
+        if (game.connection && game.connection.open) { connection.close(); return; }
         game.connection = connection;
-        connection.on("open", () => send({ type: "lobby-info", name: game.nickname }));
+        connection.on("open", () => {
+            if (game.phase === "lobby") send({ type: "lobby-info", name: game.nickname });
+            else send(publicState());
+        });
         connection.on("data", handleHostMessage);
-        connection.on("close", () => setStatus("Your opponent disconnected.", true));
+        connection.on("close", () => { game.connection = null; setStatus("Your opponent disconnected.", true); });
         connection.on("error", () => setStatus("The connection was interrupted.", true));
     });
     game.peer.on("error", error => setStatus(error.type === "peer-unavailable" ? "That lobby was not found." : "PeerJS could not connect.", true));
@@ -168,13 +197,24 @@ function startHosting() {
 function startJoining(hostCode, errorElement) {
     if (!hostCode) { errorElement.textContent = "Enter the host lobby code."; return; }
     if (typeof Peer === "undefined") { errorElement.textContent = "PeerJS could not load. Check your internet connection and try again."; return; }
-    game.role = "guest"; game.peer = new Peer(); renderLobby("connecting");
+    game.role = "guest"; game.hostCode = hostCode; setLobbyCookie(hostCode);
+    if (game.peer && !game.peer.destroyed) game.peer.destroy();
+    game.connection = null; game.peer = new Peer(); renderLobby("connecting");
+    watchPeerConnection();
     game.peer.on("open", () => {
         game.connection = game.peer.connect(hostCode);
         game.connection.on("open", () => send({ type: "join", name: game.nickname }));
         game.connection.on("data", handleGuestMessage);
         game.connection.on("error", () => setStatus("The connection was interrupted.", true));
-        game.connection.on("close", () => setStatus("The host disconnected.", true));
+        game.connection.on("close", () => {
+            game.connection = null;
+            const savedLobbyCode = getLobbyCookie();
+            if (savedLobbyCode && game.role === "guest") {
+                startJoining(savedLobbyCode, { textContent: "" });
+            } else {
+                renderLobby("join", "The host connection was lost. Rejoin when ready.");
+            }
+        });
     });
     game.peer.on("error", () => setStatus("That lobby could not be reached.", true));
 }
@@ -355,7 +395,8 @@ function startRematch() {
 }
 function resetGame() {
     if (game.connection) game.connection.close(); if (game.peer) game.peer.destroy();
-    game.role = null; game.peer = null; game.connection = null; game.nickname = ""; game.secrets = [null, null]; game.names = [null, null]; game.currentPlayer = 0; game.maxNumber = DEFAULT_MAX_NUMBER; game.history = []; game.pendingQuestion = null; game.questionDraft = ""; game.phase = "lobby"; game.winner = null; game.winningGuess = null; renderStart();
+    clearLobbyCookie();
+    game.role = null; game.peer = null; game.connection = null; game.hostCode = null; game.nickname = ""; game.secrets = [null, null]; game.names = [null, null]; game.currentPlayer = 0; game.maxNumber = DEFAULT_MAX_NUMBER; game.history = []; game.pendingQuestion = null; game.questionDraft = ""; game.phase = "lobby"; game.winner = null; game.winningGuess = null; renderStart();
 }
 document.querySelector(".close-dialog").addEventListener("click", () => rulesDialog.close());
 rulesDialog.addEventListener("click", event => { if (event.target === rulesDialog) rulesDialog.close(); });
